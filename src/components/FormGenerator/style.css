@@ -1,0 +1,28 @@
+.form-container {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    margin: 1rem;
+    max-width: 90%;
+}
+
+.form-header {
+    justify-content: center;
+    width: 100%;
+    font-size: 20px;
+    font-weight: 500;
+    color: rgb(46, 48, 47)
+}
+
+.active-btn {
+    cursor: pointer;
+    color: red;
+    margin-top: 2.8rem;
+
+}
+
+.disable-btn {
+    cursor: disabled;
+    color: #515254;
+    margin-top: 2.8rem;
+}
