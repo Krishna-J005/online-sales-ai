@@ -94,8 +94,8 @@ export const RadioInput = styled.input.attrs(props => ({
     box-sizing: border-box;
     font-size: 16px;
     padding: 0px 8px;
-    width: 250px;
-    height: 32px;
+    width: 50px;
+    height: 24px;
     border: 1px solid rgb(204, 204, 204);
     display: block;
     ::placeholder {
@@ -112,8 +112,8 @@ export const CheckBoxInput = styled.input.attrs(props => ({
     box-sizing: border-box;
     font-size: 16px;
     padding: 0px 8px;
-    width: 250px;
-    height: 32px;
+    width: 50px;
+    height: 24px;
     border: 1px solid rgb(204, 204, 204);
     display: block;
     ::placeholder {
