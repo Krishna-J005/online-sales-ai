@@ -3,7 +3,6 @@ import './App.css';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import FormComponent from './components/Form/index'
 import FormGenerator from './components/FormGenerator/index'
-import Coupon from './components/couponProperties/index'
 import NotFound from './components/NotFound/index';
 import Tables from './components/Table.js';
 const rowsPerPageOptions = [10, 20, 50];
@@ -66,7 +65,6 @@ function App() {
         <Route path="/fillForm/:formID" exact element={<FormComponent />} />
         <Route path="/viewForm/:formID" element={<FormGenerator viewData={true} />} />
         <Route path="/createForm" exact element={<FormGenerator/>} />
-        <Route path="/coupon" exact element={<Coupon />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </div>
