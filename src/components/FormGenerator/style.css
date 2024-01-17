@@ -26,3 +26,7 @@
     color: #515254;
     margin-top: 2.8rem;
 }
+
+.error-msg {
+    color: red;
+}

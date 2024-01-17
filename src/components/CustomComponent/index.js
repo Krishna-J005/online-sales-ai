@@ -10,6 +10,13 @@ export const FieldHeader = styled.div`
     font-weight: bold;
 `
 
+export const SubHeader = styled.div`
+    padding: 0px 8px;
+    font-size: 16px;
+    margin-top: 8px;
+    font-weight: 500;
+`
+
 
 export const FormLabel = styled.label`
     width: 100%;

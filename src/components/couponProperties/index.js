@@ -85,12 +85,13 @@ const CouponProperty = (props) => {
             <>
              <div style={{width: "100%"}}>
               <FieldHeader style={{width:'100%'}}>{item.label}</FieldHeader> 
-            <FieldArray name='subComponent' render={arrayhelpers => (
+              <FieldArray name='subComponent' render={arrayhelpers => (
                 formObj?.values?.[itemName]?.[item['key']] ?
                     formObj?.values?.[itemName]?.[item['key']].map((val, ind) => {
                         return (
                             <FlexRowContainer>{
                                 item.children.map((child,i) => {
+                                    debugger
                                     name = `${itemName}.${item['key']}[${ind}][${child.key}]`
                                     error = formObj?.errors[itemName]?.[item.key]?.[ind]?.[child.key]
                                     values = formObj.values[itemName]?.[item.key]?.[ind]?.[child.key]

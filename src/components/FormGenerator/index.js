@@ -1,6 +1,6 @@
 import { FormPropertiesMap, validationCheck, FormPropertiesSet } from './html'
 import { FieldHeader, FlexContainer, FormGroup, FormLabel, FlexRowContainer, 
-    FormInput, SingleSelect, FlexColumnWrapper } from '../CustomComponent/index'
+    FormInput, SingleSelect, FlexColumnWrapper, SubHeader } from '../CustomComponent/index'
 import { Fragment } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import * as Yup from 'yup'
@@ -17,7 +17,7 @@ import { useState, useEffect, useCallback } from 'react';
 
 const prepareData = (item, val, offerVal) => {
     if (!offerVal[val]) offerVal[val] = {}
-    else if (item.type === 'subChildren' && item.key == 'field')
+    else if (item.type === 'subChildren')
         return offerVal[val][item.key] = [{
             label: '',
             key: '',
@@ -25,10 +25,11 @@ const prepareData = (item, val, offerVal) => {
             placeholder: '',
             isRequired: true,
             validationType: '',
-            optionList: [{
-                key: "",
+            optionList: [[{
+                optionLabel: "",
                 value: "",
-            }]
+            }],
+        ]
         }];
     return offerVal[val][item.key] = ''
 }
@@ -55,6 +56,7 @@ function FormGenerator(props) {
     ];
 
     const placeholderIncluded = ['text', 'text-area', 'number'];
+    const optionListIncluded = ['select', 'checkbox', 'radio'];
     const validationList = ['Email', 'Mobile', 'Input Length', 'Min', 'Max'];
     const param = useParams()
     const navigate = useNavigate()
@@ -112,7 +114,7 @@ function FormGenerator(props) {
                 isRequired: true,
                 validationType: '',
                 optionList: [{
-                    key: "",
+                    optionLabel: "",
                     value: "",
                 }]
             })
@@ -225,71 +227,6 @@ function FormGenerator(props) {
         )
     }
 
-    const getDerivedExtraInfo  = (item, itemName, index, formObj) => {
-        let name = '', values = '', error = '', showError = ''
-        return (
-            <>
-                <div style={{ width: "100%" }}>
-                    <FieldHeader style={{ width: '100%' }}>{item.label}</FieldHeader>
-                    <FieldArray name='subComponent' render={arrayhelpers => (
-                        formObj?.values?.[itemName]?.[item['key']] ?
-                            formObj?.values?.[itemName]?.[item['key']].map((val, ind) => {
-                                return (
-                                    <FlexRowContainer>{
-                                        item.children.map((child, i) => {
-                                            name = `${itemName}.${item['key']}[${ind}][${child.key}]`
-                                            error = formObj?.errors[itemName]?.[item.key]?.[ind]?.[child.key]
-                                            values = formObj.values[itemName]?.[item.key]?.[ind]?.[child.key]
-                                            showError = error === 'Required' && formObj.touched?.[itemName]?.[item.key]?.[ind]?.[child.key]
-                                            return (
-                                                <>
-                                                    <FormGroup>
-                                                        <FormLabel required={item.validation[0] === 'required'}>{child.label}</FormLabel>
-                                                        <FormInput type={child.type} medium name={name}
-                                                            value={values}
-                                                            onBlur={(e) => formObj.handleBlur(e)}
-                                                            onChange={(e) => {
-                                                                formObj.setFieldValue(e.target.name, e.target.value)
-                                                            }}>
-                                                        </FormInput>
-                                                        {showError && (<div style={{ color: 'red', marginTop: '.5rem' }}>{error}</div>)}
-                                                    </FormGroup>
-
-                                                </>)
-                                        })
-
-                                    }
-                                    </FlexRowContainer>)
-                            }) : null)
-                    }
-                    />
-                    <Button variant="contained" color="secondary" onClick={(e) => { addInfo(e, item, itemName, formObj) }}
-                        style={{ margin: '10px', padding: '10px 15px', width: '20%' }}>Add ExtraInfo
-                    </Button>
-                </div>
-            </>
-        )
-    }
-
-    const createInput = (val, itemName, index, formObj, name, showError, error, values, items = 'templateDetails') => {
-        return (<FormGroup>
-            <FormLabel required={val.validation[0] === 'required'}>{val.label}</FormLabel>
-            <FormInput type={val.type} medium name={name}
-                value={values}
-                placeholder={val.placeholder}
-                onWheel={(e) => { if (val.type === 'number') e.target.blur() }}
-                onBlur={(e) => formObj.setFieldTouched(name, true)}
-                onChange={(e) => {
-                    // console.log(e.target)
-                    if (val.type === 'number') formObj.setFieldValue(name, +(e.target.value))
-                    else formObj.setFieldValue(name, e.target.value)
-                }}>
-            </FormInput>
-            {showError && (<div style={{ color: 'red', marginTop: '.5rem' }}>{error}</div>)}
-        </FormGroup>)
-    }
-
-    
 
     const getDerivedInputHtml = (item, itemName, index, formObj) => {
         let name = `${itemName}.${item.key}`
@@ -314,6 +251,61 @@ function FormGenerator(props) {
         )
     }
 
+    const getDerivedOptionInfo = (item, itemName, index, formObj, child, ind, childIndex) => {
+        let name = '', values = '', error = '', showError = '';
+        return (
+            <Fragment key={child.key}> 
+                <SubHeader style={{ width: '100%' }}>{item.children[childIndex].label}</SubHeader>
+                <FieldArray name='subComponent' render={arrayhelpers => (
+                        formObj?.values?.[itemName]?.[item['key']]?.[ind]?.[child.key].map((val, id) => {
+                            return (
+                                <FlexRowContainer>
+                                {
+                                    Object.keys(val[0]).map((children, i) => {
+                                        debugger
+                                        name = `${itemName}.${item['key']}.${[ind]}.${child.key}.${id}.0.${[children]}`
+                                        error = formObj.errors[itemName]?.[item.key]?.[ind]?.[child.key]?.[id]?.[0]?.[children];
+                                        values = formObj.values[itemName]?.[item.key]?.[ind]?.[child.key]?.[id]?.[0]?.[children];
+                                        showError = error === 'Required' && formObj.touched?.[itemName]?.[item.key]?.[ind]?.[child.key]?.[id]?.[0]?.[children];
+                                        return (
+                                            <>
+                                                <FormGroup>
+                                                    <FormLabel required={item.children[childIndex].children?.[i]?.validation?.[0] === 'required'}>{item.children[childIndex].children?.[i].label}</FormLabel>
+                                                    <FormInput type={child.type} medium name={name}
+                                                        value={values}
+                                                        onBlur={(e) => formObj.handleBlur(e)}
+                                                        onChange={(e) => {
+                                                            formObj.setFieldValue(e.target.name, e.target.value)
+                                                        }}>
+                                                    </FormInput>
+                                                    {showError && (<div style={{ color: 'red', marginTop: '.5rem' }}>{error}</div>)}
+                                                </FormGroup>
+
+                                            </>)
+                                    })
+
+                                }
+                                </FlexRowContainer>)
+                        })
+                    )
+                }
+                />
+                <div style={{width:'100%'}}>{formObj.values[itemName]?.[item.key]?.[ind]?.['type'] && !placeholderIncluded.includes(formObj.values[itemName]?.[item.key]?.[ind]?.['type']) &&
+                    <Button
+                        variant="contained"
+                        color="secondary"
+                        onClick={(e) => { addInfo(e, item, itemName, formObj) }}
+                        disabled={props.viewData === true}
+                        style={{ margin: '10px', padding: '8px 12px', width: '200px', textTransform: 'none' }}
+                    >
+                        Add Options
+                    </Button>
+                }
+                </div>
+            </Fragment>
+        )
+    }
+
     const getDerivedHtml = (item, itemName, index, formObj) => {
         let name = '', values = '', error = '', showError = ''
         return (
@@ -329,7 +321,7 @@ function FormGenerator(props) {
                                             name = `${itemName}.${item['key']}[${ind}][${child.key}]`
                                             error = formObj?.errors[itemName]?.[item.key]?.[ind]?.[child.key]
                                             values = formObj.values[itemName]?.[item.key]?.[ind]?.[child.key]
-                                            showError = error?.length > 0 && formObj.touched?.[itemName]?.[item.key]?.[ind]?.[child.key]
+                                            showError = error?.length > 0 && formObj.touched?.[itemName]?.[item.key]?.[ind]?.[child.key];
                                             if(child.key !== 'optionList'){
                                                 return (
                                                     <Fragment key={i}>
@@ -427,49 +419,16 @@ function FormGenerator(props) {
                                                     </Fragment>
                                                 )
                                             }
-                                            else{
+                                            else if (child.key == 'optionList' && optionListIncluded.includes(formObj.values[itemName]?.[item.key]?.[ind]?.['type'])){
                                                 debugger
-                                                return(child.children.map((grandChild, index) => {
-                                                    name = `${itemName}.${item['key']}[${ind}][${child.key}][${index}][${grandChild.key}]`;
-                                                    error = formObj?.errors[itemName]?.[item.key]?.[ind]?.[child.key]?.[index]?.[grandChild.key];
-                                                    values = formObj.values[itemName]?.[item.key]?.[ind]?.[child.key]?.[index]?.[grandChild.key];
-                                                    showError = error?.length > 0 && formObj.touched?.[itemName]?.[item.key]?.[ind]?.[child.key]?.[index]?.[grandChild.key];
-                                                    return (
-                                                        <Fragment key={i}>
-                                                            <FormGroup>
-                                                                <FormLabel required={grandChild.validation[0] === 'required'}>{grandChild.label} {grandChild.validation[0] === 'required' && ' *'}</FormLabel>
-                                                                <FormInput type={grandChild.type} 
-                                                                    medium 
-                                                                    name={name}
-                                                                    value={values}
-                                                                    onBlur={(e) => formObj.handleBlur(e)}
-                                                                    onChange={(e) => {
-                                                                        formObj.setFieldValue(e.target.name, e.target.value)
-                                                                    }}>
-                                                                </FormInput>
-                                                                {showError && (<div style={{ color: 'red', marginTop: '.5rem' }}>{error}</div>)}
-                                                            </FormGroup>
-
-                                                        </Fragment>
-                                                    )
-                                                })) 
+                                                return getDerivedOptionInfo(item, itemName, index, formObj, child, ind, i);
                                             }   
                                         })
 
                                     }
-                                    {formObj.values[itemName]?.[item.key]?.[ind]?.['type'] && !placeholderIncluded.includes(formObj.values[itemName]?.[item.key]?.[ind]?.['type']) &&
-                                         <Button
-                                            variant="outlined"
-                                            color="primary"
-                                            onClick={(e) => { addInfo(e, item, itemName, formObj) }}
-                                            disabled={props.viewData === true}
-                                            style={{ margin: '10px', padding: '8px 12px', width: '200px', textTransform: 'none' }}
-                                        >
-                                                Add Options
-                                        </Button>
-                                    }
                                     </FlexRowContainer>)
-                            }) : null)
+                            }) 
+                        : null)
                     }
                 />
                 <Button
@@ -487,8 +446,6 @@ function FormGenerator(props) {
     const createFormHtml = (item, index, formik, itemName) => {
         if (item.type === 'text')
             return getDerivedInputHtml(item, itemName, index, formik)
-        // else if (item.type === 'select')
-        //     return getDerivedSelectHtml(item, itemName, index, formik)
         else if (item.type === 'subChildren') {
             return getDerivedHtml(item, itemName, index, formik)
         }
@@ -505,7 +462,7 @@ function FormGenerator(props) {
                     >
                         {
                             formik => {
-                                console.log("Formik", formik, FormPropertiesSet)
+                                console.log("Formik", formik.values.form.field[0])
                                 return (
                                     <Form>
                                         {Object.keys(FormPropertiesSet).map((item, index) => {

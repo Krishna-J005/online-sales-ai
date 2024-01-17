@@ -57,7 +57,7 @@ export const Form_HTML = [
                 label: 'Label',
                 type: 'text',
                 html: 'input',
-                key: 'key',
+                key: 'optionLabel',
                 validation: ['required']
             }, {
                 label: 'Value',
