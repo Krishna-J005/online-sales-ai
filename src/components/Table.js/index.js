@@ -13,13 +13,14 @@ import EditIcon from '@mui/icons-material/Edit';
 import CreateIcon from '@mui/icons-material/Create';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import Tooltip from '@mui/material/Tooltip';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Link } from 'react-router-dom'
 
 
 export default function Tables(props) {
     const columns = props.columns
-    const rowsPerPageOptions = [10, 20, 50]
+    const rowsPerPageOptions = [10, 20, 50];
+    const location = useLocation();
     const buttons = props.buttons
     const navigate = useNavigate();
     const [rows, setRows] = useState([])
@@ -42,6 +43,10 @@ export default function Tables(props) {
         e.preventDefault()
         navigate("createForm")
     }
+    const viewFormData = (e) => {
+        e.preventDefault()
+        navigate("formData")
+    }
     useEffect(() => {
         setRows(props?.rows)
         setCount(props?.rows?.length)
@@ -52,27 +57,44 @@ export default function Tables(props) {
 
 
 
-    const deleteRow = async (e, id) => {
-        e.preventDefault()
-        const localData = JSON.parse(localStorage.getItem('data'))
-        const filterData = localData.filter(curr => curr.formID !== id)
+    const deleteRow = async (e, index) => {
+        e.preventDefault();
+        const key = location.pathname === '/formData' ? 'formData' : 'data';
+        const filterData = rows.filter((curr,id) => id !== index);
         setRows(filterData);
-        localStorage.setItem('data', JSON.stringify(filterData))
-        navigate('/')
+        localStorage.setItem(key, JSON.stringify(filterData))
+        // navigate('/')
     }
 
 
     return (
         <>
-            <Button style={{ margin: 10, textTransform: 'none' }}
-                type="submit"
-                variant="contained"
-                color="primary"
-                disabled={false}
-                onClick={createNewForm}
-            >
-                Create New Form
-            </Button>
+            {props.createButton &&
+                <>
+                    <Button style={{ margin: 10, textTransform: 'none' }}
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                        disabled={false}
+                        onClick={createNewForm}
+                    >
+                        Create New Form
+                    </Button>
+                    <Button style={{ margin: 10, textTransform: 'none' }}
+                        variant="outlined"
+                        color="secondary"
+                        disabled={false}
+                        onClick={viewFormData}
+                    >
+                        View Filled Form
+                    </Button>
+                </>
+            }
+            {!props.createButton &&
+                <>
+                    <h3 style={{margin:'1rem'}}>All Form Data</h3>
+                </>
+            }
 
             <Paper>
                 <TableContainer>
@@ -110,7 +132,7 @@ export default function Tables(props) {
                                             )
                                             }
                                             {
-                                                <TableCell style={{ display: 'flex', justifyContent: 'space-around' }}>
+                                                <TableCell style={{ display: 'flex', justifyContent: 'space-evenly' }}>
                                                     {
                                                         buttons?.map((button, index) => (
                                                             button?.id === 'edit' ?
@@ -124,7 +146,7 @@ export default function Tables(props) {
                                                                 </Link>
                                                                 :
                                                                 button?.id === 'view' ?
-                                                                    <Link to={`./viewForm/${val.formID}`} key={index}>
+                                                                    <Link to={!props.createButton ? `./viewForm/${val.formID}/${val.submitID}` : `./viewForm/${val.formID}`} key={index}>
                                                                         <Tooltip title={button.label}>
                                                                             <RemoveRedEyeIcon
                                                                                 style={{ pointerEvents: 'cursor' }}
@@ -145,8 +167,8 @@ export default function Tables(props) {
                                                                     :
                                                                     <Tooltip title="Delete" key={index}>
                                                                         <DeleteOutlinedIcon
-                                                                            style={{ pointerEvents: 'auto' }}
-                                                                            onClick={(e) => deleteRow(e, val["formID"])}
+                                                                            style={{ pointerEvents: 'auto', color: '#d50000' }}
+                                                                            onClick={(e) => deleteRow(e, id)}
                                                                         />
                                                                     </Tooltip>
                                                         ))

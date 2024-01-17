@@ -52,19 +52,19 @@ export const Form_HTML = [
             type: 'subChildrenObj',
             html: 'input',
             key: 'optionList',
-            validation: ['required'],
+            validation: [''],
             children: [{
                 label: 'Label',
                 type: 'text',
                 html: 'input',
                 key: 'optionLabel',
-                validation: ['required']
+                validation: ['']
             }, {
                 label: 'Value',
                 type: 'text',
                 html: 'input',
                 key: 'value',
-                validation: ['required']
+                validation: ['']
             }]
         }
         
@@ -86,7 +86,7 @@ export const validationSchema = () => {
                             label: Yup.string().trim().nullable(false).required('Required'),
                             key: Yup.string().trim().nullable(false).required('Required'),
                             type: Yup.string().trim().nullable(false).required('Required'),
-                            placeholder: Yup.string().trim().nullable(false).required('Required'),
+                            // placeholder: Yup.string().trim().nullable(false).required('Required'),
                             isRequired: Yup.string().trim().nullable(false).required('Required'),
                             // validationType: Yup.string().trim().nullable(false).required('Required'),
                         }))

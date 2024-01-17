@@ -1,8 +1,8 @@
 import { FormPropertiesMap } from './style'
-import {FieldHeader, FlexContainer, FormGroup, FormLabel, FlexRowContainer, FormInput, SingleSelect, FormArea } 
+import { FieldHeader, FlexContainer, FormGroup, FormLabel, FlexRowContainer, FormInput, SingleSelect, FormArea, CheckBoxInput, RadioInput } 
 from '../CustomComponent/index'
 import { Fragment } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import * as Yup from 'yup'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 
@@ -20,8 +20,15 @@ export const validationSchema = (FormPropertiesSet) => {
     const validateAll = {}
     Object.keys(FormPropertiesSet).forEach((val) => {
         FormPropertiesSet[val].forEach(item => {
-            if (item.validation.includes('required')) {
+            if ((item.validation.includes('required') && (item.type === 'text' || item.type === 'radio'))) {
                 validate[item.key] = Yup.string().trim().nullable(true).required('Required')
+            }
+            else if (item.validation.includes('required') && item.type === 'checkbox'){
+                validate[item.key] = Yup.array()
+                    .min(1, 'Pick at least 1 ' + item.label)
+                    .of(
+                        Yup.string().trim().nullable(false).required('Required'),
+                    )
             }
         })
         validateAll[val] = Yup.object(validate)
@@ -40,38 +47,18 @@ const getFormValue = (FormPropertiesSet) => {
 }
 const prepareData = (item, val, offerVal) => {
     if (!offerVal[val]) offerVal[val] = {}
-    else if (item.type === 'subChildren' && item.key == 'productList') return offerVal[val][item.key] = [
-        {
-            productID: '',
-            productImg: '',
-            productUrl: '',
-            name: '',
-            discount: ''
-        }
-    ];
-    else if (item.type === 'subChildren' && item.key == 'audience') return offerVal[val][item.key] = [
-        {
-            gender: '',
-            minAge: '',
-            maxAge: '',
-        }
-    ];
-    else if (item.type === 'subChildren' && item.key == 'channel') return offerVal[val][item.key] = [
-        {
-            src: '',
-            message: '',
-        }
-    ];
+    if (item.type === 'checkbox') return offerVal[val][item.key] = [];
+    if (item.type === 'radio') return offerVal[val][item.key] = '';
     else if (item.type === 'number') return offerVal[val][item.key] = '';
-    else if (item.type === 'Date') return offerVal[val][item.key] = null;
     else return offerVal[val][item.key] = ''
 }
 
 const FormComponent = (props) => {
-    const cityList = ['New Delhi', 'Mumbai', 'Chennai', 'Bangalore', 'Hyderabad', 'Noida', 'Gurugram', 'Kolkata', 'Bhubaneshwar'];
     const channelList = ['Email', 'Social Media', 'Website']
-    const param = useParams()
-    const navigate = useNavigate()
+    const param = useParams();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const key = location.pathname.includes('/formData') ? 'formData' : location.pathname.includes('/fillForm') ? 'formData' : 'data';
     const [formValues, setFormValues] = useState(null)
     const [validatedAll, setValidatedAll] = useState(null)
     const [pending, setPending] = useState(true);
@@ -82,6 +69,7 @@ const FormComponent = (props) => {
         const val = localData.filter((curr, ind) => {
             return curr.formID === param.formID
         });
+        
         const { name, formID, ...rest } = val[0];
         const prepareHTML = rest.field.map(curr => {
             const {isRequired, ...rest} = curr;
@@ -102,17 +90,15 @@ const FormComponent = (props) => {
     }, [])
 
     useEffect(() => {
-        const localData = localStorage.getItem('data') ? JSON.parse(localStorage.getItem('data')) : [];
-        console.log(localData)
+        const localData = localStorage.getItem(key) ? JSON.parse(localStorage.getItem(key)) : [];
         setData(localData)
-        if (!formValues && !props.editData) {
+        if (!formValues && props.editData === false) {
             setFormValues(getFormValue(FormPropertiesSet))
             validationSchemaCheck()
         }
-        else if (!formValues && props.editData) {
-
+        else if ((!formValues && props.editData) || (!formValues && props.viewData)) {
             const val = localData.filter((curr, ind) => {
-                return curr.formID === param.formID
+                return curr.formID == param.formID && curr.submitID == param.submitID
             })
             const form = { ...val[0] }
 
@@ -194,10 +180,10 @@ const FormComponent = (props) => {
                                                                 }
                                                             </SingleSelect>
                                                     }
-                                                    {showError && (<div style={{ color: 'red', marginTop: '.5rem' }}>{error}</div>)}
+                                                    {showError && (<div style={{ color: '#D50000', marginTop: '.5rem' }}>{error}</div>)}
                                                 </FormGroup>
                                                 {   item.children.length - 1 === i && 
-                                                    formObj.values[itemName]?.[item.key].length > 1 && <DeleteOutlineIcon style={{ cursor: 'pointer', color: 'red', marginTop: '2.8rem' }} onClick={(e) => deleteListRow(e, item, itemName, formObj, ind)}/>
+                                                    formObj.values[itemName]?.[item.key].length > 1 && <DeleteOutlineIcon style={{ cursor: 'pointer', color: '#D50000', marginTop: '2.8rem' }} onClick={(e) => deleteListRow(e, item, itemName, formObj, ind)}/>
                                                 }
                                             </Fragment>)
                                     })
@@ -269,7 +255,7 @@ const FormComponent = (props) => {
                     onChange={(e) => formObj.setFieldValue(name, e.target.value)}
                     placeholder={item.placeholder}
                 ></FormInput>
-                {showError && (<div style={{ color: 'red', marginTop: '.5rem' }}>{error}</div>)}
+                {showError && (<div style={{ color: '#d50000', marginTop: '.5rem' }}>{error}</div>)}
             </FormGroup>
         )
     }
@@ -292,7 +278,7 @@ const FormComponent = (props) => {
                     onChange={(e) => formObj.setFieldValue(name, e.target.value)}
                     placeholder={item.placeholder}
                 ></FormArea>
-                {showError && (<div style={{ color: 'red', marginTop: '.5rem' }}>{error}</div>)}
+                {showError && (<div style={{ color: '#D50000', marginTop: '.5rem' }}>{error}</div>)}
             </FormGroup>
         )
     }
@@ -316,38 +302,18 @@ const FormComponent = (props) => {
         e.preventDefault();
         setPending(true)
         let payload = { ...formObj.form }
-
-        console.log(payload)
-        if (props.editData) {
-            try {
-                const filterData = data.filter(curr => curr.formID !== param.formID)
-                setData([...filterData, payload])
-                localStorage.setItem('data', JSON.stringify([...filterData, payload]));
-                setFormValues({ ...formObj })
-                // setPending(false)
-                navigate('/')
-            }
-            catch (err) {
-                console.log("erroMessage", err)
-
-            }
-            finally {
-                setPending(false);
-            }
+        try {
+            payload.formID = param.formID;
+            payload.submitID = new Date().getTime();
+            setData([...data, payload])
+            localStorage.setItem('formData', JSON.stringify([...data, payload]));
+            // console.log("HandleSubmit response")
+            navigate('/formData')
+            setPending(false);
         }
-        else {
-            try {
-                payload.formID = 'CMP_' + (localStorage.getItem('data') ? JSON.parse(localStorage.getItem('data'))?.length + 1 : 1);
-                setData([...data, payload])
-                localStorage.setItem('data', JSON.stringify([...data, payload]));
-                console.log("HandleSubmit response")
-                navigate('/')
-                setPending(false);
-            }
-            catch (err) {
-                console.log("erroMessage", err)
-                setPending(false);
-            }
+        catch (err) {
+            console.log("erroMessage", err)
+            setPending(false);
         }
     }
 
@@ -382,15 +348,15 @@ const FormComponent = (props) => {
                         :
                         <>
                             {
-                                cityList.map((val, id) => {
-                                    return <option value={val} key={id}>{val}</option>
+                                item.optionList.map(curr => curr[0]).map((val, id) => {
+                                    return <option value={val.value} key={id}>{val.optionLabel}</option>
                                 })
                             }
                         </>
 
                     }
                 </SingleSelect>
-                {showError && (<div style={{ color: 'red', marginTop: '.5rem' }}>{error}</div>)}
+                {showError && (<div style={{ color: '#D50000', marginTop: '.5rem' }}>{error}</div>)}
             </FormGroup>
         )
     }
@@ -403,19 +369,39 @@ const FormComponent = (props) => {
         return (
             <FormGroup key={index}>
                 <FormLabel required={item.validation[0] === 'required'}>{item.label} {item.validation[0] === 'required' && ' *'}</FormLabel>
-                <FormInput type={item.type} medium name={name}
-                    value={values}
-                    disabled={props.editData && item.key === 'formID' || props.viewData === true}
-                    onBlur={(e) => {
-                        if (item.type === 'text') formObj.setFieldValue(name, e.target.value.trim())
-                        formObj.handleBlur(e)
-                    }}
-                    onChange={(e) => formObj.setFieldValue(name, e.target.value)}
-                    placeholder={item.placeholder}
-                ></FormInput>
-                {showError && (<div style={{ color: 'red', marginTop: '.5rem' }}>{error}</div>)}
+                {
+                    item.optionList.map(curr => curr[0]).map((current, id) => {
+                        return (
+                            <label key={id} style={{ display: 'flex', justifyContent:'space-between', alignItems: 'center', marginBottom: '8px'}}>
+                                <RadioInput
+                                    type='radio'
+                                    value={current.value}
+                                    checked={formObj.values?.[itemName]?.[item.key] === current.value}
+                                    disabled={props.editData && item.key === 'formID' || props.viewData === true}
+                                    onBlur={(e) => {
+                                       formObj.handleBlur(e);
+                                    }}
+                                    onChange={(e) => formObj.setFieldValue(name, e.target.value)}
+                                />
+                                <label>
+                                    {current.optionLabel}
+                                </label>
+                            </label>
+                        )
+                    })
+                }
+                {showError && (<div style={{ color: '#D50000', marginTop: '.5rem' }}>{error}</div>)}
             </FormGroup>
         )
+    }
+
+    const handleCheckBox = (item, itemName, index, formObj, event) => {
+        if (event.target.checked) {
+            formObj.values[itemName][item.key] = [...formObj.values?.[itemName]?.[item.key], event.target.value];
+        } else {
+            formObj.values[itemName][item.key] = formObj.values?.[itemName]?.[item.key].filter(curr => curr !== event.target.value)
+        }
+        setFormValues({ ...formObj?.values })
     }
 
     const getDerivedCheckBoxHtml = (item, itemName, index, formObj) => {
@@ -426,17 +412,27 @@ const FormComponent = (props) => {
         return (
             <FormGroup key={index}>
                 <FormLabel required={item.validation[0] === 'required'}>{item.label} {item.validation[0] === 'required' && ' *'}</FormLabel>
-                <FormInput type={item.type} medium name={name}
-                    value={values}
-                    disabled={props.editData && item.key === 'formID' || props.viewData === true}
-                    onBlur={(e) => {
-                        if (item.type === 'text') formObj.setFieldValue(name, e.target.value.trim())
-                        formObj.handleBlur(e)
-                    }}
-                    onChange={(e) => formObj.setFieldValue(name, e.target.value)}
-                    placeholder={item.placeholder}
-                ></FormInput>
-                {showError && (<div style={{ color: 'red', marginTop: '.5rem' }}>{error}</div>)}
+                {
+                    item.optionList.map(curr => curr[0]).map((current, id) => {
+                        return (
+                            <label key={id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                <CheckBoxInput
+                                    type='checkbox'
+                                    value={current.value}
+                                    disabled={props.editData && item.key === 'formID' || props.viewData === true}
+                                    onBlur={(e) => {
+                                        formObj.handleBlur(e)
+                                    }}
+                                    onChange={(e) => handleCheckBox(item, itemName, index, formObj, e)}
+                                />
+                                <label>
+                                {current.optionLabel}
+                                </label>
+                            </label>
+                        )
+                    })
+                }
+                {showError && (<div style={{ color: '#D50000', marginTop: '.5rem' }}>{error}</div>)}
             </FormGroup>
         )
     }
@@ -486,7 +482,7 @@ const FormComponent = (props) => {
                                         }
                                         {(<>
                                             <div style={{ display: 'flex', justifyContent: 'end' }}>
-                                                {/* {(Object.keys(formik.errors).length > 0 && Object.keys(formik.touched).length > 0) && <div style={{ color: 'red', margin: '.5rem', fontWeight: 'bold' }}>Required field are Missing</div>} */}
+                                                {/* {(Object.keys(formik.errors).length > 0 && Object.keys(formik.touched).length > 0) && <div style={{ color: '#D50000', margin: '.5rem', fontWeight: 'bold' }}>Required field are Missing</div>} */}
                                             </div>
                                             <div style={{ display: 'flex', justifyContent: 'end' }}>
                                                 <Button
